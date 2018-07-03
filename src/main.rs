@@ -1,5 +1,3 @@
-#![feature(core_intrinsics)]
-
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -47,22 +45,31 @@ fn main() {
             // A pair is a combination of the rule which matched and a span of input
             //println!("Rule:    {:?}", pair.as_rule());
             //println!("Span:    {:?}", span);
-            println!("LINE:    {}", span.as_str());
-
-            // A pair can be converted to an iterator of the tokens which make it up:
-            for inner_pair in pair.into_inner() {
-                let inner_span = inner_pair.clone().into_span();
-                match inner_pair.as_rule() {
-                    Rule::itype => println!("Letter:  {}", inner_span.as_str()),
-                    Rule::variable | Rule::constant => {
-                        for part_pair in inner_pair.into_inner() {
-                            let part = part_pair.clone().into_span();
-                            println!("PART {:?}:   {}", part_pair.as_rule(), part_pair.as_str())
-                        }
-                    },
-                    _ => println!("{:?}:   {}", inner_pair.as_rule(), inner_span.as_str())
-                };
+            println!("BEGIN {:?}", pair.as_rule());
+            match pair.as_rule() {
+                Rule::definition => {
+                    // A pair can be converted to an iterator of the tokens which make it up:
+                    for inner_pair in pair.clone().into_inner() {
+                        let inner_span = inner_pair.clone().into_span();
+                        match inner_pair.as_rule() {
+                            Rule::variable | Rule::constant => {
+                                for part_pair in inner_pair.into_inner() {
+                                    let part = part_pair.clone().into_span();
+                                    println!("  PART {:?}:   {}", part_pair.as_rule(), part_pair.as_str())
+                                }
+                            },
+                            _ => panic!("ERR {:?}:   {}", inner_pair.as_rule(), inner_span.as_str())
+                        };
+                    }
+                },
+                Rule::comment => {
+                    println!("{}", pair.as_str());
+                },
+                _ => panic!("ERR {:?}:   {}", pair.as_rule(), span.as_str())
             }
+
+
+            println!("END {:?}", pair.as_rule());
         }
     }
 }
