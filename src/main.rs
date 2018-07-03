@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::env;
 
 extern crate pest;
 #[macro_use]
@@ -13,30 +14,7 @@ use pest::Parser;
 #[grammar = "parser/rosmsg.pest"]
 struct IdentParser;
 
-fn main() {
-    let path = Path::new("hello.txt");
-    let display = path.display();
-
-    println!("Processing: {}", display);
-
-    let mut file = match File::open(&path) {
-        // The `description` method of `io::Error` returns a string that
-        // describes the error
-        Err(why) => panic!("couldn't open {}: {}", display,
-                                                   why.description()),
-        Ok(file) => file,
-    };
-
-    // Read the file contents into a string, returns `io::Result<usize>`
-    let mut s = String::new();
-    match file.read_to_string(&mut s) {
-        Err(why) => panic!("couldn't read {}: {}", display,
-                                                   why.description()),
-        Ok(_) => (),
-    }
-
-    let files = IdentParser::parse(Rule::file, &s).unwrap_or_else(|e| panic!("{}", e));
-
+fn dump_ast(files : pest::iterators::Pairs<Rule>){
     for file in files {
 
         // Because ident_list is silent, the iterator will contain idents
@@ -73,28 +51,60 @@ fn main() {
         }
     }
 }
+fn main() {
+
+    let args: Vec<String> = env::args().collect();
+
+    let path = Path::new(&args[1]);
+    let display = path.display();
+
+    println!("Processing: {}", display);
+
+    let mut file = match File::open(&path) {
+        // The `description` method of `io::Error` returns a string that
+        // describes the error
+        Err(why) => panic!("couldn't open {}: {}", display,
+                                                   why.description()),
+        Ok(file) => file,
+    };
+
+    // Read the file contents into a string, returns `io::Result<usize>`
+    let mut s = String::new();
+    match file.read_to_string(&mut s) {
+        Err(why) => panic!("couldn't read {}: {}", display,
+                                                   why.description()),
+        Ok(_) => (),
+    }
+
+    let files = IdentParser::parse(Rule::file, &s).unwrap_or_else(|e| panic!("{}", e));
+
+    dump_ast(files);
+}
 
 #[test]
 fn it_works() {
-    let pairs = IdentParser::parse(Rule::file, "a1 b2").unwrap_or_else(|e| panic!("{}", e));
+    let path = Path::new("hello.txt");
+    let display = path.display();
 
-    // Because ident_list is silent, the iterator will contain idents
-    for pair in pairs {
+    println!("Processing: {}", display);
 
-        let span = pair.clone().into_span();
-        // A pair is a combination of the rule which matched and a span of input
-        println!("Rule:    {:?}", pair.as_rule());
-        println!("Span:    {:?}", span);
-        println!("Text:    {}", span.as_str());
+    let mut file = match File::open(&path) {
+        // The `description` method of `io::Error` returns a string that
+        // describes the error
+        Err(why) => panic!("couldn't open {}: {}", display,
+                           why.description()),
+        Ok(file) => file,
+    };
 
-        // A pair can be converted to an iterator of the tokens which make it up:
-        for inner_pair in pair.into_inner() {
-            let inner_span = inner_pair.clone().into_span();
-            match inner_pair.as_rule() {
-                Rule::itype => println!("Letter:  {}", inner_span.as_str()),
-                Rule::identifier => println!("Digit:   {}", inner_span.as_str()),
-                _ => println!("UNK:   {}", inner_span.as_str())
-            };
-        }
+    // Read the file contents into a string, returns `io::Result<usize>`
+    let mut s = String::new();
+    match file.read_to_string(&mut s) {
+        Err(why) => panic!("couldn't read {}: {}", display,
+                           why.description()),
+        Ok(_) => (),
     }
+
+    let files = IdentParser::parse(Rule::file, &s).unwrap_or_else(|e| panic!("{}", e));
+
+    dump_ast(files);
 }
