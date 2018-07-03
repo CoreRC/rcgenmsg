@@ -1,0 +1,8 @@
+[package]
+name = "rcgenmsg"
+version = "0.1.0"
+authors = ["Fan Jiang <prof.fan@foxmail.com>"]
+
+[dependencies]
+pest = "^1.0"
+pest_derive = "^1.0"

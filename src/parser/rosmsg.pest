@@ -1,0 +1,60 @@
+// ROS Message Definition Parser
+// ==========================
+
+file = {
+    (result)*
+}
+result = _{
+    (" " | "\t")* ~ (comment | definition)? ~ sp ~ comment? ~ linebreak+
+}
+
+sp = _{
+    (" " | "\t")*
+}
+
+linebreak = _{
+    "\n" | "\r"
+}
+
+types = {
+    ("bool" | "uint8" | "float32" | "string" | "Header" | !("\n" | "\r" | "\t")+)
+}
+
+array = {
+    types ~ ("[]")
+}
+
+itype = {
+    array | types
+}
+
+identifier = {
+    ('a'..'z' | 'A'..'Z' | "_")+
+}
+
+value = {
+    ('a'..'z' | 'A'..'Z' | '0'..'9')+
+}
+
+constant = {
+    itype ~ sp ~ identifier ~ sp ~ "=" ~ sp ~ value
+}
+
+variable = {
+    itype ~ sp ~ identifier ~ sp ~ !("=")
+}
+
+definition = {
+    (variable | constant)
+}
+
+// string = {
+//    ( !("\r\n" | "\n") )+
+// }
+
+// comment = {
+//     "#" ~ string
+// }
+
+nonl = _{ !linebreak ~ any }
+comment = { "#" ~ nonl* }
