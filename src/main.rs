@@ -130,17 +130,23 @@ fn compile_file(ast: ASTDef) {
     use handlebars::Handlebars;
 
     let mut reg = Handlebars::new();
-    // render without register
-    println!(
-        "{}",
-        reg.render_template("Hello {{name}}", &json!({"name": "foo"}))
-            .unwrap()
-    );
 
+    let template = r###"struct BatteryState {
+{{#each consts as |c| ~}}
+  const {{c.name}} @0 : {{c.typ}} = {{ c.val }};{{ c.comment }}
+{{/each ~}}
+
+{{#each fields as |f| ~}}
+  {{f.name}} @0 : {{f.typ}};{{ f.comment }}
+{{/each ~}}
+}"###;
+    // render without register
+    println!("{}", reg.render_template( template, &serde_json::to_value(&ast).unwrap()).unwrap());
+    //println!("{}", serde_json::to_string(&ast).unwrap());
     // register template using given name
-    reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
-        .unwrap();
-    println!("{}", reg.render("tpl_1", &json!({"name": "foo"})).unwrap());
+//    reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
+//        .unwrap();
+//    println!("{}", reg.render("tpl_1", &json!({"name": "foo"})).unwrap());
 }
 
 fn main() {
