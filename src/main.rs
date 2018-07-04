@@ -166,7 +166,7 @@ fn main() {
     let path = Path::new(&filename);
     let display = path.display();
 
-    println!("Processing: {}", display);
+    eprintln!("Processing: {}", display);
 
     let mut file = match File::open(&path) {
         // The `description` method of `io::Error` returns a string that
