@@ -5,7 +5,7 @@ file = {
     (result)*
 }
 result = _{
-    (" " | "\t")* ~ (comment | definition)? ~ sp ~ comment? ~ linebreak+
+    (" " | "\t")* ~ (comment | definition)? ~ linebreak+
 }
 
 sp = _{
@@ -37,14 +37,14 @@ value = {
 }
 
 constant = {
-    itype ~ sp ~ identifier ~ sp ~ "=" ~ sp ~ value
+    itype ~ sp ~ identifier ~ sp ~ "=" ~ sp ~ value ~ sp ~ comment?
 }
 
 variable = {
-    itype ~ sp ~ identifier ~ sp ~ !("=")
+    itype ~ sp ~ identifier ~ sp ~ !("=") ~ sp ~ comment?
 }
 
-definition = {
+definition = _{
     (variable | constant)
 }
 
@@ -56,5 +56,6 @@ definition = {
 //     "#" ~ string
 // }
 
-nonl = _{ !linebreak ~ any }
-comment = { "#" ~ nonl* }
+nonl = { !linebreak ~ any }
+comment_prefix = _{ "#" ~ sp }
+comment = { comment_prefix ~ nonl* }
