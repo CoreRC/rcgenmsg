@@ -10,7 +10,9 @@ use argparse::{ArgumentParser, Store, StoreTrue};
 
 extern crate handlebars;
 
-#[macro_use]
+extern crate inflector;
+use inflector::Inflector;
+
 extern crate serde_json;
 
 #[macro_use]
@@ -129,19 +131,50 @@ fn pest_to_ast(pes: &pest::iterators::Pair<Rule>) -> Option<ASTDef> {
 fn compile_file(ast: ASTDef) {
     use handlebars::Handlebars;
 
-    let mut reg = Handlebars::new();
+    let reg = Handlebars::new();
 
-    let template = r###"struct BatteryState {
+    let template = r###"struct {{msg_name}} {
 {{#each consts as |c| ~}}
-  const {{c.name}} @0 : {{c.typ}} = {{ c.val }};{{ c.comment }}
+  const {{c.name}} : {{c.typ}} = {{ c.val }};{{ c.comment }}
 {{/each ~}}
 
 {{#each fields as |f| ~}}
-  {{f.name}} @0 : {{f.typ}};{{ f.comment }}
+  {{f.name}} @{{f.id}} : {{f.typ}};{{ f.comment }}
 {{/each ~}}
 }"###;
+
+    let mut json_data = serde_json::to_value(&ast).unwrap();
+
+    json_data.as_object_mut().unwrap().insert("msg_name".to_string(), "BatteryInfo".into());
+
+    if json_data.get("fields").is_some() {
+        let mut i: i64 = 0;
+        for mut f in json_data["fields"].as_array_mut().unwrap() {
+            {
+                let fname = f.get("name").unwrap().as_str().unwrap().to_string();
+                //let newname = serde_json::Value::String());
+                *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
+            }
+            f.as_object_mut().unwrap().insert("id".to_string(), i.into());
+            i += 1;
+        }
+    }
+
+    if json_data.get("consts").is_some() {
+        let mut i: i64 = 0;
+        for mut f in json_data["consts"].as_array_mut().unwrap() {
+            {
+                let fname = f.get("name").unwrap().as_str().unwrap().to_string();
+                //let newname = serde_json::Value::String());
+                *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
+            }
+            f.as_object_mut().unwrap().insert("id".to_string(), i.into());
+            i += 1;
+        }
+    }
+
     // render without register
-    println!("{}", reg.render_template( template, &serde_json::to_value(&ast).unwrap()).unwrap());
+    println!("{}", reg.render_template( template, &json_data).unwrap());
     //println!("{}", serde_json::to_string(&ast).unwrap());
     // register template using given name
 //    reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
@@ -203,7 +236,7 @@ fn it_works() {
     let path = Path::new("hello.txt");
     let display = path.display();
 
-    println!("Processing: {}", display);
+    eprintln!("Processing: {}", display);
 
     let mut file = match File::open(&path) {
         // The `description` method of `io::Error` returns a string that

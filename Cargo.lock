@@ -1,4 +1,13 @@
 [[package]]
+name = "Inflector"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "lazy_static 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -112,6 +121,7 @@ dependencies = [
 name = "rcgenmsg"
 version = "0.1.0"
 dependencies = [
+ "Inflector 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "handlebars 1.0.0-beta.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pest 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -237,6 +247,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
+"checksum Inflector 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "4467f98bb61f615f8273359bf1c989453dfc1ea4a45ae9298f1dcd0672febe5d"
 "checksum aho-corasick 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)" = "f0ba20154ea1f47ce2793322f049c5646cc6d0fa9759d5f333f286e507bf8080"
 "checksum argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "37bb99f5e39ee8b23b6e227f5b8f024207e8616f44aa4b8c76ecd828011667ef"
 "checksum cfg-if 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "efe5c877e17a9c717a0bf3613b2709f723202c4e4675cc8f12926ded29bcb17e"
