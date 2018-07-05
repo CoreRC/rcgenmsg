@@ -163,7 +163,7 @@ dependencies = [
 
 [[package]]
 name = "rcgenmsg"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "Inflector 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",

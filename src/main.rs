@@ -5,8 +5,8 @@ use std::path::Path;
 //use std::env;
 
 extern crate argparse;
-extern crate regex;
 extern crate crypto;
+extern crate regex;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
 
@@ -53,7 +53,7 @@ pub struct ASTDef {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TypeTransformRule {
     from: String,
-    to: String
+    to: String,
 }
 
 fn pest_to_ast(pes: &pest::iterators::Pair<Rule>) -> Option<ASTDef> {
@@ -144,39 +144,41 @@ fn type_mapping(mut typ: String) -> String {
         Some(t) => {
             typ = t[1].to_string();
             is_array = true;
-        },
-        None => {
-
         }
+        None => {}
     }
 
     match typ.as_ref() {
         "bool" => {
             typ = "Bool".to_string();
-        },
+        }
         "int8" | "int16" | "int32" | "int64" => {
             typ = str::replace(typ.as_ref(), "int", "Int").into();
-        },
+        }
         "uint8" | "uint16" | "uint32" | "uint64" => {
             typ = str::replace(typ.as_ref(), "uint", "UInt").into();
-        },
+        }
         "float32" | "float64" => {
             typ = str::replace(typ.as_ref(), "float", "Float").into();
-        },
+        }
         "time" => {
             typ = "import \"/Time.capnp\".Time".to_string();
-        },
+        }
         "duration" => {
             typ = "import \"/Duration.capnp\".Time".to_string();
-        },
+        }
         "string" => {
             typ = "Text".to_string();
         }
         "Header" => {
             typ = "import \"/std_msgs/Header.capnp\".Header".to_string();
-        },
+        }
         _ => {
-            typ = format!(r#"import "/{}.capnp".{}"#, typ, typ.split("/").collect::<Vec<&str>>()[1]);
+            typ = format!(
+                r#"import "/{}.capnp".{}"#,
+                typ,
+                typ.split("/").collect::<Vec<&str>>()[1]
+            );
         }
     }
 
@@ -213,7 +215,7 @@ struct {{msg_name}} {
     let mut json_data = serde_json::to_value(&ast).unwrap();
 
     let msg_name = filename.file_stem().unwrap().to_str().unwrap();
-    let msg_id : String;
+    let msg_id: String;
 
     {
         use crypto::digest::Digest;
@@ -230,17 +232,27 @@ struct {{msg_name}} {
 
         result[0] |= 1u8 << 7;
 
-        let result_str: Vec<String> = result[0..8].iter()
-            .map(|b| format!("{:02x}", b))
-            .collect();
+        let result_str: Vec<String> = result[0..8].iter().map(|b| format!("{:02x}", b)).collect();
 
         msg_id = "0x".to_string() + &result_str.join("");
     }
 
-    json_data.as_object_mut().unwrap().insert("msg_name".to_string(), msg_name.into());
-    json_data.as_object_mut().unwrap().insert("namespace".to_string(), namespace.into());
-    json_data.as_object_mut().unwrap().insert("id".to_string(), msg_id.into());
-    json_data.as_object_mut().unwrap().insert("filename".to_string(), filename.display().to_string().into());
+    json_data
+        .as_object_mut()
+        .unwrap()
+        .insert("msg_name".to_string(), msg_name.into());
+    json_data
+        .as_object_mut()
+        .unwrap()
+        .insert("namespace".to_string(), namespace.into());
+    json_data
+        .as_object_mut()
+        .unwrap()
+        .insert("id".to_string(), msg_id.into());
+    json_data.as_object_mut().unwrap().insert(
+        "filename".to_string(),
+        filename.display().to_string().into(),
+    );
 
     if json_data.get("fields").is_some() {
         let mut i: i64 = 0;
@@ -248,17 +260,19 @@ struct {{msg_name}} {
             {
                 let fname = f.get("name").unwrap().as_str().unwrap().to_string();
                 //let newname = serde_json::Value::String());
-                *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
+                *f.pointer_mut("/name").unwrap() =
+                    inflector::cases::camelcase::to_camel_case(&fname).into();
             }
 
             {
                 let ftype = f.get("typ").unwrap().as_str().unwrap().to_string();
 
                 *f.pointer_mut("/typ").unwrap() = type_mapping(ftype).into();
-
             }
 
-            f.as_object_mut().unwrap().insert("id".to_string(), i.into());
+            f.as_object_mut()
+                .unwrap()
+                .insert("id".to_string(), i.into());
             i += 1;
         }
     }
@@ -269,28 +283,30 @@ struct {{msg_name}} {
             {
                 let fname = f.get("name").unwrap().as_str().unwrap().to_string();
                 //let newname = serde_json::Value::String());
-                *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
+                *f.pointer_mut("/name").unwrap() =
+                    inflector::cases::camelcase::to_camel_case(&fname).into();
             }
 
             {
                 let ftype = f.get("typ").unwrap().as_str().unwrap().to_string();
 
                 *f.pointer_mut("/typ").unwrap() = type_mapping(ftype).into();
-
             }
 
-            f.as_object_mut().unwrap().insert("id".to_string(), i.into());
+            f.as_object_mut()
+                .unwrap()
+                .insert("id".to_string(), i.into());
             i += 1;
         }
     }
 
     // render without register
-    println!("{}", reg.render_template( template, &json_data).unwrap());
+    println!("{}", reg.render_template(template, &json_data).unwrap());
     //println!("{}", serde_json::to_string(&ast).unwrap());
     // register template using given name
-//    reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
-//        .unwrap();
-//    println!("{}", reg.render("tpl_1", &json!({"name": "foo"})).unwrap());
+    //    reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
+    //        .unwrap();
+    //    println!("{}", reg.render("tpl_1", &json!({"name": "foo"})).unwrap());
 }
 
 fn main() {
@@ -374,7 +390,7 @@ fn it_works() {
             Some(ast) => {
                 println!("{:?}", ast);
 
-                compile_file(&path,"", ast);
+                compile_file(&path, "", ast);
             }
             None => panic!("Failed to parse AST from Pest tree"),
         },
