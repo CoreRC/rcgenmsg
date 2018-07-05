@@ -161,7 +161,7 @@ struct {{msg_name}} {
     let mut json_data = serde_json::to_value(&ast).unwrap();
 
     let msg_name = filename.file_stem().unwrap().to_str().unwrap();
-    let mut msg_id = "".to_string();
+    let msg_id : String;
 
     {
         use crypto::digest::Digest;
@@ -171,7 +171,18 @@ struct {{msg_name}} {
         buf.push_str("::");
         buf.push_str(msg_name);
         md5.input(&buf.as_bytes());
-        msg_id = "0x".to_string() + &md5.result_str()[0..16];
+
+        let mut result = vec![0u8; 16];
+
+        md5.result(&mut result);
+
+        result[0] |= 1u8 << 7;
+
+        let result_str: Vec<String> = result[0..8].iter()
+            .map(|b| format!("{:02x}", b))
+            .collect();
+
+        msg_id = "0x".to_string() + &result_str.join("");
     }
 
     json_data.as_object_mut().unwrap().insert("msg_name".to_string(), msg_name.into());
