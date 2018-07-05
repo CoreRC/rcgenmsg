@@ -16,8 +16,12 @@ linebreak = _{
     "\n" | "\r"
 }
 
+//types = {
+//    ("bool" | "uint8" | "float32" | "string" | "Header" | !("\n" | "\r" | "\t")+)
+//}
+
 types = {
-    ("bool" | "uint8" | "float32" | "string" | "Header" | !("\n" | "\r" | "\t")+)
+    ('a'..'z' | 'A'..'Z' | '0'..'9' | "_" | "/")+
 }
 
 array = {

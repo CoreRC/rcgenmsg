@@ -5,7 +5,7 @@ use std::path::Path;
 //use std::env;
 
 extern crate argparse;
-
+extern crate regex;
 extern crate crypto;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
@@ -135,6 +135,58 @@ fn pest_to_ast(pes: &pest::iterators::Pair<Rule>) -> Option<ASTDef> {
     return Some(ast);
 }
 
+fn type_mapping(mut typ: String) -> String {
+    let arr_regex = regex::Regex::new(r"(.+)[\[\]][\]]").unwrap();
+
+    let mut is_array = false;
+
+    match arr_regex.captures(typ.clone().as_ref()) {
+        Some(t) => {
+            typ = t[1].to_string();
+            is_array = true;
+        },
+        None => {
+
+        }
+    }
+
+    match typ.as_ref() {
+        "bool" => {
+            typ = "Bool".to_string();
+        },
+        "int8" | "int16" | "int32" | "int64" => {
+            typ = str::replace(typ.as_ref(), "int", "Int").into();
+        },
+        "uint8" | "uint16" | "uint32" | "uint64" => {
+            typ = str::replace(typ.as_ref(), "uint", "UInt").into();
+        },
+        "float32" | "float64" => {
+            typ = str::replace(typ.as_ref(), "float", "Float").into();
+        },
+        "time" => {
+            typ = "import \"/Time.capnp\".Time".to_string();
+        },
+        "duration" => {
+            typ = "import \"/Duration.capnp\".Time".to_string();
+        },
+        "string" => {
+            typ = "Text".to_string();
+        }
+        "Header" => {
+            typ = "import \"/std_msgs/Header.capnp\".Header".to_string();
+        },
+        _ => {
+            typ = format!(r#"import "/{}.capnp".{}"#, typ, typ.split("/").collect::<Vec<&str>>()[1]);
+        }
+    }
+
+    if is_array {
+        typ = format!("List({})", typ);
+    }
+
+    return typ;
+}
+
 fn compile_file(filename: &Path, namespace: &str, ast: ASTDef) {
     use handlebars::Handlebars;
 
@@ -150,11 +202,11 @@ $Cxx.namespace("{{ namespace }}");
 
 struct {{msg_name}} {
 {{#each consts as |c| ~}}
-  const {{c.name}} : {{c.typ}} = {{ c.val }};{{ c.comment }}
+  const {{c.name}} : {{{c.typ}}} = {{ c.val }};{{ c.comment }}
 {{/each ~}}
 
 {{#each fields as |f| ~}}
-  {{f.name}} @{{f.id}} : {{f.typ}};{{ f.comment }}
+  {{f.name}} @{{f.id}} : {{{f.typ}}};{{ f.comment }}
 {{/each ~}}
 }"###;
 
@@ -198,6 +250,14 @@ struct {{msg_name}} {
                 //let newname = serde_json::Value::String());
                 *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
             }
+
+            {
+                let ftype = f.get("typ").unwrap().as_str().unwrap().to_string();
+
+                *f.pointer_mut("/typ").unwrap() = type_mapping(ftype).into();
+
+            }
+
             f.as_object_mut().unwrap().insert("id".to_string(), i.into());
             i += 1;
         }
@@ -211,6 +271,14 @@ struct {{msg_name}} {
                 //let newname = serde_json::Value::String());
                 *f.pointer_mut("/name").unwrap() = inflector::cases::camelcase::to_camel_case(&fname).into();
             }
+
+            {
+                let ftype = f.get("typ").unwrap().as_str().unwrap().to_string();
+
+                *f.pointer_mut("/typ").unwrap() = type_mapping(ftype).into();
+
+            }
+
             f.as_object_mut().unwrap().insert("id".to_string(), i.into());
             i += 1;
         }
@@ -279,7 +347,7 @@ fn main() {
 
 #[test]
 fn it_works() {
-    let path = Path::new("BatteryInfo.msg");
+    let path = Path::new("test_messages/BatteryInfo.msg");
     let display = path.display();
 
     eprintln!("Processing: {}", display);
