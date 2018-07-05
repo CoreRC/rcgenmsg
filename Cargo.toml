@@ -16,3 +16,5 @@ serde_json = "^1.0.22"
 serde = "^1.0.69"
 
 Inflector = "*"
+
+rust-crypto = "^0.2.36"
